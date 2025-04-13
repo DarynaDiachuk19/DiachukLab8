@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold text-center mb-6 text-white">Список продуктів</h1>
+    <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Список продуктів</h1>
 
     <input
         v-model="q"
@@ -21,11 +21,19 @@
       </thead>
       <tbody>
       <tr v-for="product in filteredRows" :key="product.id" class="hover:bg-gray-100 transition-colors duration-200">
-        <td v-for="column in columns" :key="column.id" class="border-t border-b px-6 py-4 text-sm text-gray-700">
-            <span v-if="column.id === 'thumbnail'">
-              <!-- Пусте поле для фото -->
-            </span>
-          <span v-else>{{ product[column.id] }}</span>
+        <td class="border-t border-b px-6 py-4 text-sm text-gray-700">{{ product.title }}</td>
+        <td class="border-t border-b px-6 py-4 text-sm text-gray-700">{{ product.description }}</td>
+        <td class="border-t border-b px-6 py-4 text-sm text-gray-700">{{ product.price }}$</td>
+        <td
+            class="border-t border-b px-6 py-4 text-sm"
+            :class="product.rating >= 4.5 ? 'text-green-600' : 'text-red-600'"
+        >
+          {{ product.rating }}
+        </td>
+        <td class="border-t border-b px-6 py-4 text-sm text-gray-700">{{ product.brand }}</td>
+        <td class="border-t border-b px-6 py-4 text-sm text-gray-700">{{ product.category }}</td>
+        <td class="border-t border-b px-6 py-4 text-sm">
+          <img :src="product.thumbnail" alt="Фото" class="w-[100px] h-[100px] object-cover rounded-lg" />
         </td>
       </tr>
       </tbody>
@@ -46,14 +54,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const q = ref('')
 const pagination = ref({ page: 1, pageSize: 10 })
-const products = ref([
-  { id: 1 },
-  { id: 2 }
-])
+const products = ref([])
 
 const columns = [
   { id: 'title', label: 'Назва', sortable: true, sorted: null },
@@ -65,6 +70,13 @@ const columns = [
   { id: 'thumbnail', label: 'Фото', sortable: false, sorted: null }
 ]
 
+// Завантаження з API
+onMounted(async () => {
+  const res = await fetch('https://dummyjson.com/products/category/laptops')
+  const data = await res.json()
+  products.value = data.products
+})
+
 const filteredRows = computed(() => {
   let rows = products.value
 
@@ -74,7 +86,10 @@ const filteredRows = computed(() => {
     )
   }
 
-  return rows.slice((pagination.value.page - 1) * pagination.value.pageSize, pagination.value.page * pagination.value.pageSize)
+  return rows.slice(
+      (pagination.value.page - 1) * pagination.value.pageSize,
+      pagination.value.page * pagination.value.pageSize
+  )
 })
 
 const totalPages = computed(() => {
@@ -117,19 +132,4 @@ const sortColumn = (column) => {
 </script>
 
 <style scoped>
-.bg-peach {
-  background-color: #261b0f;
-}
-
-.bg-peach-light {
-  background-color: #857761;
-}
-
-.text-white {
-  color: white;
-}
-
-button:hover {
-  background-color: #491806;
-}
 </style>
